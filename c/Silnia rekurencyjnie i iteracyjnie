@@ -1,0 +1,41 @@
+#include <stdio.h>
+ 
+long long int rek(short n)
+{
+    if (n<=1)
+    {
+        return 1;
+    }
+    else
+    {
+        return n*rek(n-1);
+    }
+}
+ 
+long long int ite(short n)
+{
+    long long int wynik;
+    if (n<=1)
+    {
+        return 1;
+    }
+    else
+    {
+        wynik=1;
+        while (n!=0)
+        {
+            wynik=wynik*n;
+            n--;
+        }
+        return wynik;
+    }
+}
+ 
+int main()
+{
+    short n;
+    n=20;
+    printf("%lld\n", rek(n));
+    printf("%lld\n", ite(n));
+    return 0;
+}
