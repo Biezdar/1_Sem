@@ -1,0 +1,31 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main()
+{
+    int i;
+    char **tablica = malloc(5*sizeof(30*sizeof(char)));
+
+    for (i=0; i<5; i++)
+    {
+        tablica[i]=malloc(sizeof(30*sizeof(char)));
+    }
+
+    tablica[0]="jeden";
+    tablica[1]="dwa";
+    tablica[2]="trzy";
+    tablica[3]="cztery";
+    tablica[4]="piec";
+
+    printf("%s, %s, %s, %s, %s\n", tablica[0], tablica[1], tablica[2], tablica[3], tablica[4]);
+
+    //fgets(tablica[0], 30, stdin);
+
+    //printf("Koniec wczytywania\n\n");
+
+    //printf("%s, %s, %s, %s, %s\n", tablica[0], tablica[1], tablica[2], tablica[3], tablica[4]);
+
+    free(tablica);
+
+    return 0;
+}
