@@ -1,0 +1,212 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct
+{
+    char imie[256];
+    char nazwisko[256];
+    char tytul[256];
+    int numer;
+    double cena;
+} Ksiazka;
+
+void wczytaj_ksiazke(Ksiazka *gdzie)
+{
+    printf("Podaj imie autora: ");
+    scanf("%s", gdzie->imie);
+    printf("Podaj nazwisko autora: ");
+    scanf("%s", gdzie->nazwisko);
+    printf("Podaj tytul ksiazki: ");
+    scanf("%s", gdzie->tytul);
+    printf("Podaj numer katalogowy: ");
+    scanf("%d", &gdzie->numer);
+    printf("Podaj cene: ");
+    scanf("%lf", &gdzie->cena);
+    printf("\n");
+}
+
+void wypisz_ksiazke(const Ksiazka *k)
+{
+    printf("Ksiazka %d - \"%s\", autor: %s %s, cena: %.2lf\n", k->numer, k->tytul, k->imie, k->nazwisko, k->cena);
+}
+
+typedef struct el
+{
+    void *dane;
+    struct el *nastepny;
+    struct el *poprzedni;
+} Element;
+
+typedef void (*FunkcjaWypisujaca)(const void *element);
+
+typedef struct
+{
+    int ile_elementow;
+    int wielkosc_danych;
+    FunkcjaWypisujaca wypisz;
+    Element *pierwszy;
+    Element *ostatni;
+} Lista;
+
+Lista* lista_utworz(int wielkosc_danych, FunkcjaWypisujaca funkcja_wypisujaca)
+{
+    Lista *tmp = malloc(sizeof(Lista));
+
+    tmp->wypisz = funkcja_wypisujaca;
+    tmp->wielkosc_danych = wielkosc_danych;
+    tmp->ile_elementow = 0;
+    tmp->pierwszy = NULL;
+    tmp->ostatni = NULL;
+
+    return tmp;
+}
+
+void lista_dodaj_na_koniec(Lista *lista, void *dane_elementu)
+{
+    Element *tmp = malloc(sizeof(Element));
+
+    tmp->dane = malloc(lista->wielkosc_danych);
+    memcpy(tmp->dane, dane_elementu, lista->wielkosc_danych);
+
+    tmp->nastepny = NULL;
+    tmp->poprzedni = NULL;
+
+    if (lista->ile_elementow==0)
+    {
+        lista->pierwszy=tmp;
+        lista->ostatni=tmp;
+    }
+    else
+    {
+        tmp->poprzedni=lista->ostatni;
+        lista->ostatni->nastepny=tmp;
+        lista->ostatni=tmp;
+    }
+    lista->ile_elementow++;
+}
+
+void lista_usun_ostatni(Lista *lista)
+{
+    if (lista->ile_elementow<1)
+    {
+        printf("Lista jest juz pusta");
+        return;
+    }
+
+    Element *przedostatni = lista->ostatni->poprzedni;
+
+    if (przedostatni!=NULL)
+    {
+        przedostatni->nastepny=NULL;
+    }
+    else
+    {
+        lista->pierwszy=NULL;
+    }
+
+    free(lista->ostatni->dane);
+    free(lista->ostatni);
+
+    lista->ostatni=przedostatni;
+    lista->ile_elementow--;
+}
+
+void lista_wyczysc(Lista *lista)
+{
+    while (lista->ile_elementow>0)
+    {
+        lista_usun_ostatni(lista);
+    }
+}
+
+void lista_skasuj(Lista *lista)
+{
+    lista_wyczysc(lista);
+    free(lista);
+}
+
+void lista_wypisz(const Lista *lista)
+{
+    Element *ac;
+    for (ac=lista->pierwszy; ac!=NULL; ac=ac->nastepny)
+    {
+        lista->wypisz(ac->dane);
+    }
+}
+
+void lista_zrzuc(const Lista *lista)
+{
+    Element *ac;
+    FILE *gdzie;
+
+    char nazwa_pliku[256];
+    printf("podaj nazwe pliku: ");
+    scanf("%s", nazwa_pliku);
+
+    gdzie=fopen(nazwa_pliku, "w");
+
+    for (ac=lista->pierwszy; ac!=NULL; ac=ac->nastepny)
+    {
+        fwrite(ac->dane, lista->wielkosc_danych, 1, gdzie);
+    }
+
+    fclose(gdzie);
+}
+
+void lista_zaladuj(Lista *lista)
+{
+    void *dane = malloc(lista->wielkosc_danych);
+    FILE *skad;
+
+    char nazwa_pliku[256];
+    printf("Podaj nazwe pliku: ");
+    scanf("%s", nazwa_pliku);
+
+    skad=fopen(nazwa_pliku, "r");
+
+    while (1)
+    {
+        fread(dane, lista->wielkosc_danych, 1, skad);
+        if (feof(skad) || ferror(skad))
+        {
+            break;
+        }
+        lista_dodaj_na_koniec(lista, dane);
+    }
+    free(dane);
+    fclose(skad);
+}
+
+int main()
+{
+    Lista *lista = lista_utworz(sizeof(Ksiazka), wypisz_ksiazke);
+
+    Ksiazka a;
+    char wybor;
+
+    printf("Witaj w programie bibliotecznym.\n");
+    printf("Dostepne komendy: \nd - dodaj\nu - usun\nw - wypisz\nq - wyjscie\n");
+    printf("z - zrzuc liste do pliku\nr - wczytaj liste z pliku\n");
+    do {
+        scanf("%c", &wybor);
+        memset(&a, 0, sizeof(Ksiazka)); // Zerujemy nasz¹ zmienn¹ pomocnicz¹
+
+        switch(wybor) {
+            case 'd': wczytaj_ksiazke(&a);
+                      lista_dodaj_na_koniec(lista, &a);
+                      break;
+            case 'u': lista_usun_ostatni(lista);
+                      break;
+            case 'w': lista_wypisz(lista);
+                      break;
+            case 'r': lista_zaladuj(lista);
+                      break;
+            case 'z': lista_zrzuc(lista);
+                      break;
+        }
+    } while (wybor != 'q');
+
+    lista_skasuj(lista);
+    return 0;
+}
