@@ -1,0 +1,12 @@
+/* tablica dwuwymiarowa [n][n]: */
+
+/* alokacja: */
+int **tab = (int**) malloc(n * sizeof (int*));          //alokacja 'pierwszego' wymiaru
+for (m = 0; m < n; m++)
+    tab[m] = (int*) malloc(n * sizeof (int));           //alokacja 'drugiego' wymiaru
+
+
+/* zwalnianie pamięci: */
+for (m = 0; m < n; m++)
+    free(tab[m]);          //zwalnianie 'drugiego' wymiaru
+free(tab);                 //zwalnianie 'pierwszego' wymiaru
