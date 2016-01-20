@@ -1,0 +1,180 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Diamond {
+	int ID;
+	int Price;
+	struct Diamond * NextDiamond;
+};
+
+struct Earrings {
+	int ID;
+	int DiamondIDs[2];
+	int Price;
+	struct Earrings * NextEarrings;
+};
+
+int AddDiamond(int _Price, struct Diamond ** Head)
+{
+	struct Diamond * NewDiamond;
+	int _ID = 1;
+	NewDiamond = (struct Diamond *) malloc(sizeof (struct Diamond));
+
+	while (*Head != NULL)
+	{
+            Head = &((*Head)->NextDiamond);
+            _ID++;
+      }
+
+	NewDiamond->ID = _ID;
+	NewDiamond->Price = _Price;
+	NewDiamond->NextDiamond = NULL;
+
+	*Head = NewDiamond;
+	return 0;
+}
+
+void DumpDiamondList(struct Diamond ** Head)
+{
+	printf("\nLista kamieni w bazie:\n");
+	while (*Head != NULL)
+	{
+		printf("Diament o ID:%d | ma cene: %d\n", (*Head)->ID, (*Head)->Price);
+		Head = &((*Head)->NextDiamond);
+	}
+}
+
+int AddEarrings(struct Earrings ** Head, struct Diamond * Diamond1, struct Diamond * Diamond2)
+{
+	struct Earrings * NewEarrings;
+	int _ID = 1;
+	NewEarrings = (struct Earrings *) malloc(sizeof (struct Earrings));
+
+	while (*Head != NULL)
+	{
+            Head = &((*Head)->NextEarrings);
+            _ID++;
+      }
+
+	NewEarrings->ID = _ID;
+	NewEarrings->DiamondIDs[0] = Diamond1->ID;
+	NewEarrings->DiamondIDs[1] = Diamond2->ID;
+	NewEarrings->Price = Diamond1->Price + Diamond2->Price;
+	NewEarrings->NextEarrings = NULL;
+
+	*Head = NewEarrings;
+	return 0;
+}
+
+struct Earrings * CreateEarringsList(struct Diamond ** DiamondHead)
+{
+	struct Diamond ** Head = DiamondHead;
+	struct Earrings * EarringsHead = NULL;
+	int DiamondCount = 0;
+	int i, Offset;
+	struct Diamond * PrimaryDiamond;
+
+	while (*Head != NULL)
+	{
+		Head = &((*Head)->NextDiamond);
+		DiamondCount++;
+	}
+
+	for (i = 1; i <= DiamondCount; i++)
+	{
+		Head = DiamondHead;
+		for (Offset = 1; Offset < i; Offset++) Head = &((*Head)->NextDiamond);
+		PrimaryDiamond = *Head;
+		while (*Head != NULL)
+		{
+			AddEarrings(&EarringsHead, PrimaryDiamond, *Head);
+			Head = &((*Head)->NextDiamond);
+		}
+	}
+
+	return EarringsHead;
+}
+
+struct Earrings * FindEarrings(struct Earrings ** Head, int ID1, int ID2)
+{
+	int i;
+	if (ID1 > ID2)
+	{
+		i = ID1;
+		ID1 = ID2;
+		ID2 = i;
+	}
+
+	while (*Head != NULL)
+	{
+		if ((*Head)->DiamondIDs[0] == ID1 && (*Head)->DiamondIDs[1] == ID2) break;
+		else Head = &((*Head)->NextEarrings);
+	}
+
+	return *Head;
+}
+
+void DumpEarringsList(struct Earrings ** Head)
+{
+	while (*Head != NULL)
+	{
+		printf("Kolczyk o ID:%d | z kamykow o ID:%d i ID:%d | ma cene: %d\n", (*Head)->ID, (*Head)->DiamondIDs[0], (*Head)->DiamondIDs[1], (*Head)->Price);
+		Head = &((*Head)->NextEarrings);
+	}
+}
+
+int main(void)
+{
+	struct Diamond * DiamondHead = NULL;
+	struct Earrings * EarringsHead;
+	struct Earrings * FoundEarrings;
+	char c;
+	int DiamondPrice, DiamondID1, DiamondID2;
+
+	while(1)
+	{
+		printf("Czy chcesz dodac nowy kamien do bazy? (y/n) : ");
+		c = getchar();
+		if (c == 'y') 
+		{
+			printf("Podaj cene nowego kamienia: ");
+			scanf("%d", &DiamondPrice);
+			AddDiamond(DiamondPrice, &DiamondHead);
+		}
+		else if (c == 'n') 
+		{
+			c = getchar();
+			break;
+		}
+		c = getchar();
+	}
+
+	DumpDiamondList(&DiamondHead);
+
+	printf("\nSystem przetwarza dane i tworzy mozliwe pary...");
+	EarringsHead = CreateEarringsList(&DiamondHead);
+	printf("\nGotowe - mozesz teraz sprawdzic ceny kolczykow.");
+
+	while(1)
+	{
+		printf("\nCzy chcesz wyszukac kolczyki? (y/n) : ");
+		c = getchar();
+		if (c == 'y') 
+		{
+			printf("Podaj identyfikator pierwszego kamienia: ");
+			scanf("%d", &DiamondID1);
+			printf("Podaj identyfikator drugiego kamienia: ");
+			scanf("%d", &DiamondID2);
+			FoundEarrings = FindEarrings(&EarringsHead, DiamondID1, DiamondID2);
+			printf("Znalezione kolczyki maja ID: %d, a ich cena wynosi: %d", FoundEarrings->ID, FoundEarrings->Price);
+		}
+		else if (c == 'n') 
+		{
+			c = getchar();
+			break;
+		}
+		c = getchar();
+	}
+
+	return 0;
+}
