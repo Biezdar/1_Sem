@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main()
+{
+    int wiersz = 15;
+    int kolumna = 15;
+    int licznik = 1;
+    int w, k;
+
+    int **tab = (int**) malloc(wiersz * sizeof (int*));
+    for (w = 0; w < wiersz; w++)
+    {
+        tab[w] = (int*) malloc(licznik * sizeof (int));
+        licznik++;
+    }
+
+    /* wprowadzanie wartosci: */
+    licznik=1;
+    for (w=0; w<wiersz; w++)
+    {
+        for (k=0; k<licznik; k++)
+        {
+            tab[w][k]=(w+1)*(k+1);  //instrukcja
+        }
+        licznik++;
+    }
+
+    /* wypisywanie na ekran: */
+    licznik=1;
+    for (w=0; w<wiersz; w++)
+    {
+        for (k=0; k<licznik; k++)
+        {
+            printf("%4d", tab[w][k]);
+        }
+        licznik++;
+        printf("\n");
+    }
+
+    /* zwalnianie pamięci: */
+    for (w = 0; w < wiersz; w++)
+        free(tab[w]);
+    free(tab);
+
+    return 0;
+}
