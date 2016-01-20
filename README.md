@@ -1,1 +1,1 @@
-# 1_Semestr
+# 1_Sem
