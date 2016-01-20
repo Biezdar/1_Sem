@@ -1,0 +1,12 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main()
+{
+    char znak='a';
+    znak=znak^32; //z malych na duze
+    znak=znak|32; //z duzych na male
+    printf("%c\n", znak);
+    return 0;
+}
