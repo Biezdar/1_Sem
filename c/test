@@ -1,0 +1,115 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#define SIZE 100
+#define ADRES "moj.txt"
+
+typedef struct
+{
+    char najdluzsze_slowo[SIZE];
+    int najwieksza_dlugosc;
+} NajdluzszeSlowo;
+
+bool czy_slowo_same_znaki(const char *slowo)
+{
+    int i;
+    bool czy_prawda = true; // wartosc 1
+    for (i=0; i<strlen(slowo); i++)
+    {
+        if ((slowo[i]>96) && (slowo[i]<123))
+        {
+            czy_prawda=false;  // wartosc 0
+        }
+    }
+    return czy_prawda;
+}
+
+void nowe_najdluzsze_slowo(char *slowo, NajdluzszeSlowo *moj_najdl_slowo)
+{
+    strcpy(moj_najdl_slowo->najdluzsze_slowo, slowo);
+    moj_najdl_slowo->najwieksza_dlugosc=strlen(slowo);
+}
+
+char obrabiaj_slowo(char *slowo)
+{
+    int i;
+
+    /* zamiana wielkich liter w slowie na male */
+    for (i=0; i<strlen(slowo); i++)
+    {
+        slowo[i]=slowo[i]|32;
+    }
+
+    if (czy_slowo_same_znaki(slowo))
+    {
+        /* cale slowo sklada sie ze znakow roznych od liter */
+        slowo[0]='\0';
+    }
+    else
+    {
+        while ((slowo[0]<97) || (slowo[0]>122) || (slowo[strlen(slowo)-1]<97) || (slowo[strlen(slowo)-1]>122))
+        {
+            /* usuwanie niechcianych znakow z poczatku */
+            if ((slowo[0]<97) || (slowo[0]>122))
+            {
+                char *pomoc = (char*)malloc(sizeof(char)*(strlen(slowo)-1));
+                pomoc=&slowo[1];
+                strcpy(slowo, pomoc);
+                free(pomoc);
+                pomoc=NULL;
+            }
+
+            /* usuwanie niechcianych znakow z konca */
+            if ((slowo[strlen(slowo)-1]<97) || (slowo[strlen(slowo)-1]>122))
+            {
+                slowo[strlen(slowo)-1]='\0';
+            }
+        }
+        /* instrukcja do dodania slowa do listy */
+    }
+    printf("Slowo: \"%20s\", <%2d>, ", slowo, strlen(slowo));
+}
+
+void otworz_plik()
+{
+    FILE *plik;
+    plik=fopen(ADRES, "r");
+
+    NajdluzszeSlowo *moje_najdluzsze_slowo = malloc(sizeof(NajdluzszeSlowo));
+    memcpy(moje_najdluzsze_slowo->najdluzsze_slowo, "\0", sizeof(char)*SIZE);
+    moje_najdluzsze_slowo->najwieksza_dlugosc=0;
+
+    if (plik==NULL)
+    {
+        printf("Blad otwarcia. \a");
+        exit(0);
+    }
+
+    unsigned int licznik_lini = 1;
+    char bufor[SIZE];
+
+    while (feof(plik)==0)
+    {
+        bufor[0]='\0';
+        fscanf(plik, "%s", bufor);
+
+        printf("[%4d], przed: <%2d>, ", licznik_lini, strlen(bufor));
+        obrabiaj_slowo(bufor);
+        printf("po: <%2d> \n", strlen(bufor));
+        licznik_lini++;
+        if (strlen(bufor)>moje_najdluzsze_slowo->najwieksza_dlugosc)
+        {
+            nowe_najdluzsze_slowo(bufor, moje_najdluzsze_slowo);
+        }
+    }
+    printf("dlugosc: %d ", moje_najdluzsze_slowo->najwieksza_dlugosc);
+    printf("Najdluzsze slowo: %s\n", moje_najdluzsze_slowo->najdluzsze_slowo);
+}
+
+int main()
+{
+    otworz_plik();
+
+    return 0;
+}
