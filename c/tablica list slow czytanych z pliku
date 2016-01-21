@@ -1,0 +1,234 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#define SIZE 100
+#define ADRES "tekst.txt"
+
+typedef struct
+{
+    char najdluzsze_slowo[SIZE];
+    unsigned int najwieksza_dlugosc;
+} NajdluzszeSlowo;
+
+typedef struct sl
+{
+    char *slowo;
+    unsigned int liczba_pow;
+    struct sl *nastepny;
+} Slowo;
+
+typedef struct
+{
+    int ile_elementow;
+    Slowo *pierwszy;
+    Slowo *ostatni;
+} Lista;
+
+Lista* utwotz_lista()
+{
+    Lista *tmp = malloc(sizeof(Lista));
+    tmp->ile_elementow = 0;
+    tmp->pierwszy = NULL;
+    tmp->ostatni = NULL;
+    return tmp;
+}
+
+Slowo* utworz_slowo(int dlugosc_slowa)
+{
+    Slowo *tmp = (Slowo*)malloc(sizeof(Slowo));
+    tmp->slowo = (char*)malloc(sizeof(char)*dlugosc_slowa);
+    tmp->liczba_pow = 1;
+    tmp->nastepny = NULL;
+    return tmp;
+}
+
+void dodaj_do_listy_slowo(Lista *lista, char *wyraz)
+{
+    Slowo *nowy = utworz_slowo(strlen(wyraz)+1);
+    strcpy(nowy->slowo, wyraz);
+
+    /* stworz nowy poczatek gdy go nie ma */
+    if (lista->ile_elementow==0)
+    {
+        lista->pierwszy=nowy;
+        lista->ostatni=nowy;
+    }
+    else
+    {
+        /* badz dodaj do listy na koniec */
+        lista->ostatni->nastepny=nowy;
+        lista->ostatni=nowy;
+    }
+    lista->ile_elementow++;
+}
+
+bool sprawdz_czy_slowo_jest_na_liscie(const Lista *lista, char *slowo)
+{
+    bool czy_jest_na_liscie = false; //0 - nie
+    char *wyraz = (char*)malloc(sizeof(char)*(strlen(slowo)+1));
+    strcpy(wyraz, slowo);
+    Slowo *aktualny;
+    for (aktualny=lista->pierwszy; aktualny!=NULL; aktualny=aktualny->nastepny)
+    {
+        if (strcmp(aktualny->slowo, wyraz)==0)
+        {
+            aktualny->liczba_pow++;
+            czy_jest_na_liscie=true; //1 - tak
+            //printf("<system> powtarzane slowo to: %s\n", aktualny->slowo);
+            break;
+        }
+    }
+    return czy_jest_na_liscie;
+}
+
+void dodaj_slowo(Lista *lista, char *slowo)
+{
+    bool czy_juz_jest;
+    czy_juz_jest=sprawdz_czy_slowo_jest_na_liscie(lista, slowo);
+    /* sprawdza czy slowo jest juz na liscie */
+    //printf("<system> Wchodze do funkcji dodaj_slowo. %s, %d\n", slowo, czy_juz_jest);
+
+    if (czy_juz_jest)
+    {
+        //printf("Slowo jest juz na liscie.\n");
+    }
+    /* a gdy nie ma to dodaje do listy na koniec*/
+    else
+    {
+        //printf("<system> Dodaje na liste slowo.\n");
+        dodaj_do_listy_slowo(lista, slowo);
+    }
+}
+
+void lista_wypisz(const Lista *lista)
+{
+    Slowo *ac;
+    printf("<system> teraz wypisze liste:\n");
+    for (ac=lista->pierwszy; ac!=NULL; ac=ac->nastepny)
+    {
+        printf("%20s, <%d>\n", ac->slowo, ac->liczba_pow);
+    }
+}
+
+bool czy_slowo_same_znaki(const char *slowo)
+{
+    int i;
+    bool czy_prawda = true; // wartosc 1
+    for (i=0; i<strlen(slowo); i++)
+    {
+        if ((slowo[i]>96) && (slowo[i]<123))
+        {
+            czy_prawda=false;  // wartosc 0
+        }
+    }
+    return czy_prawda;
+}
+
+void obrabiaj_slowo(char *slowo)
+{
+    int i;
+
+    /* zamiana wielkich liter w slowie na male */
+    for (i=0; i<strlen(slowo); i++)
+    {
+        slowo[i]=slowo[i]|32;
+    }
+
+    if (czy_slowo_same_znaki(slowo))
+    {
+        /* cale slowo sklada sie ze znakow roznych od liter */
+        slowo[0]='\0';
+    }
+    else
+    {
+        while ((slowo[0]<97) || (slowo[0]>122) || (slowo[strlen(slowo)-1]<97) || (slowo[strlen(slowo)-1]>122))
+        {
+            /* usuwanie niechcianych znakow z poczatku */
+            if ((slowo[0]<97) || (slowo[0]>122))
+            {
+                char *pomoc = (char*)malloc(sizeof(char)*(strlen(slowo)));
+                pomoc=&slowo[1];
+                strcpy(slowo, pomoc);
+                free(pomoc);
+                pomoc=NULL;
+            }
+
+            /* usuwanie niechcianych znakow z konca */
+            if ((slowo[strlen(slowo)-1]<97) || (slowo[strlen(slowo)-1]>122))
+            {
+                slowo[strlen(slowo)-1]='\0';
+            }
+        }
+    }
+}
+
+void nowe_najdluzsze_slowo(char *slowo, NajdluzszeSlowo *moj_najdl_slowo)
+{
+    strcpy(moj_najdl_slowo->najdluzsze_slowo, slowo);
+    moj_najdl_slowo->najwieksza_dlugosc=strlen(slowo);
+}
+
+void otworz_plik()
+{
+    FILE *plik;
+    plik=fopen(ADRES, "r");
+
+
+    Lista **lista = malloc(26*sizeof(Lista));
+    int i;
+    for (i=0; i<26; i++)
+    {
+        lista[i]=utwotz_lista();
+    }
+
+    NajdluzszeSlowo *moje_najdluzsze_slowo = malloc(sizeof(NajdluzszeSlowo));
+    memcpy(moje_najdluzsze_slowo->najdluzsze_slowo, "\0", sizeof(char)*SIZE);
+    moje_najdluzsze_slowo->najwieksza_dlugosc=0;
+
+    if (plik==NULL)
+    {
+        printf("Blad otwarcia. \a");
+        exit(0);
+    }
+
+    unsigned int licznik_lini = 1;
+    char bufor[SIZE];
+
+    while (feof(plik)==0)
+    {
+        bufor[0]='\0';
+        fscanf(plik, "%s", bufor);
+
+        printf("[%4d], przed: <%2d>, ", licznik_lini, strlen(bufor));
+        obrabiaj_slowo(bufor);
+        printf("Slowo: \"%20s\", <%2d>, ", bufor, strlen(bufor));
+        printf("po: <%2d> \n", strlen(bufor));
+
+        /* liczy wszystkie slowa */
+        licznik_lini++;
+
+        if (strlen(bufor)>0)
+        {
+            dodaj_slowo(lista[bufor[0]-96], bufor);
+            if (strlen(bufor)>moje_najdluzsze_slowo->najwieksza_dlugosc)
+            {
+                 nowe_najdluzsze_slowo(bufor, moje_najdluzsze_slowo);
+            }
+        }
+    }
+    printf("dlugosc: %d ", moje_najdluzsze_slowo->najwieksza_dlugosc);
+    printf("Najdluzsze slowo: %s\n", moje_najdluzsze_slowo->najdluzsze_slowo);
+
+    for (i=0; i<26; i++)
+    {
+        lista_wypisz(lista[i]);
+    }
+}
+
+int main()
+{
+    otworz_plik();
+
+    return 0;
+}
